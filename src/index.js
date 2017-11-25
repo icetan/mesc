@@ -18,7 +18,7 @@ export type {
 } from './es/driver-interfaces'
 
 export type {
-  EventSourceConfig
+  EventSourceConfig,
 } from './config/config'
 
 module.exports = {
@@ -34,4 +34,3 @@ module.exports = {
 
   ...require('./drivers'),
 }
-

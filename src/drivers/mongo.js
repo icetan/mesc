@@ -45,11 +45,15 @@ class MongoStateStore<S> implements StateStore<S> {
       })
   }
 
-  saveState(rstate: RState<S>): Promise<void> {
+  _saveState(rstate: RState<S>): Promise<void> {
     console.log(`Persisting state ${JSON.stringify(rstate)}`)
     return this._collection.findOneAndReplace(
       { stateId: this.persistedState.stateId },
-      rstate,
+      {
+        stateId: this.persistedState.stateId,
+        v: rstate.v,
+        state: rstate.state,
+      },
       { upsert: true, returnOriginal: false }
     )
   }
@@ -71,7 +75,7 @@ class MongoStateStore<S> implements StateStore<S> {
       console.log(`Update info ${JSON.stringify(info)}`)
       if (!info.lastErrorObject.updatedExisting) {
         console.log(`Update failed no matching persisted state, making a full persist`)
-        return this.saveState(rstate)
+        return this._saveState(rstate)
       }
     })
   }
@@ -96,22 +100,22 @@ class MongoSnapshotStore<S> implements SnapshotStore<S> {
     return this._collection.findOne(
       { stateId: this.persistedState.stateId, v: { $lte: v } },
       { sort: [ ['v', 1] ] }
-    ).then(rstate => {
-      if (rstate == null) {
+    ).then(state => {
+      if (state == null) {
         console.log(`No snapshot found with id ${this.persistedState.stateId} before ${v}, using empty state`)
-        return {
-          v: 0,
-          state: this.persistedState.empty,
-        }
+        return { v: 0, state: this.persistedState.empty }
       } else {
-        delete rstate._id
-        return rstate
+        return { v: state.v, state: state.state }
       }
     })
   }
 
   saveSnapshot(rstate: RState<S>): Promise<void> {
-    return this._collection.save(rstate)
+    return this._collection.save({
+      stateId: this.persistedState.stateId,
+      v: rstate.v,
+      state: rstate.state,
+    })
   }
 }
 
