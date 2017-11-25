@@ -1,0 +1,124 @@
+digraph G {
+  fontname = "monospace"
+  fontsize = 11
+  pad = 0.1
+
+  node [
+    fontname = "monospace"
+    fontsize = 11
+  ]
+
+  edge [
+    fontname = "monospace"
+    fontsize = 11
+    arrowhead = open
+  ]
+
+  subgraph cluster_Float {
+  }
+
+  #subgraph cluster_Backend {
+  #  margin = 10
+  #  label = Backend
+
+    subgraph cluster_Transactors {
+      label = "Transactors (syncronized)"
+
+      ExternalSystem
+      T [shape=circle]
+      T -> ExternalSystem
+      ExternalSystem -> T
+    }
+
+    subgraph cluster_Effects {
+      label = "Effects Processors"
+
+      CommandApi
+      M [shape=square]
+
+      node [shape=circle]
+      P0 [label=P]
+      P1 [label=P]
+      P2 [label=P]
+      CommandApi -> P0 -> M
+      edge [style=dotted]
+      CommandApi-> P1 -> M
+      CommandApi -> P2 -> M
+      P0 -> T
+      T -> P0
+    }
+
+    subgraph cluster_Queue {
+      label="Event Dispatcher (synchronized)"
+
+      Queue [
+        shape = record
+        label = "{{Queue|||}}"
+      ]
+
+      E [shape=square]
+
+      EventStore [shape=cylinder]
+      Queue -> EventStore [arrowhead=none]
+      Queue -> E
+    }
+
+    subgraph cluster_State {
+      label = "State"
+      StateStore [shape=cylinder]
+      StateStore -> QueryAPI
+      StateStore -> SnapshotStore [arrowhead=none]
+      SnapshotStore [shape=cylinder]
+    }
+
+
+    subgraph cluster_Reducers {
+      label = "Reducers (pure)"
+
+      node [shape=square]
+      S₀ -> StateStore
+      S₁ -> StateStore
+      S₂ -> StateStore
+
+      node [shape=circle]
+      R₀ -> S₀
+      R₁ -> S₁
+      R₂ -> S₂
+    }
+
+    M -> Queue
+    E -> R₀
+    E -> R₁
+    E -> R₂
+  #}
+
+  subgraph cluster_Consumers {
+    label = Consumers
+
+    MobileApp
+    C [shape=square]
+
+/*** Not implementing now ***
+    subgraph cluster_CReducers {
+      label = "Reducers (pure)"
+      node [shape=circle]
+      CR0 [label=R₀]
+      CR1 [label=R₁]
+      CR2 [label=R₂]
+
+      node [shape=square]
+      V0 [label="V₀(S₀)"]
+      V1 [label="V₁(S₁)"]
+      V2 [label="V₂(S₂)"]
+    }
+    Queue -> CR0
+    Queue -> CR1
+    Queue -> CR2
+    CR0 -> V0 -> C
+    CR1 -> V1 -> C
+    CR2 -> V2 -> C
+*/
+
+    QueryAPI -> MobileApp -> C -> CommandApi
+  }
+}
