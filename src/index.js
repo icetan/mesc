@@ -1,8 +1,25 @@
 // @flow
 
-export type * from './es/interfaces'
-export type * from './es/driver-interfaces'
-export type * from './config/config'
+export type {
+  Process,
+  Reduce,
+  PersistedState,
+  Reducer,
+} from './es/interfaces'
+
+export type {
+  Event,
+  RState,
+  EventStore,
+  StateStore,
+  SnapshotStore,
+  MessageProducer,
+  MessageConsumer,
+} from './es/driver-interfaces'
+
+export type {
+  EventSourceConfig
+} from './config/config'
 
 module.exports = {
   // Impl
