@@ -34,13 +34,9 @@ class MongoStateStore<S> implements StateStore<S> {
       .then(rstate => {
         if (rstate == null) {
           console.log(`No state found with id ${this.persistedState.stateId}, using empty state`)
-          return {
-            v: 0,
-            state: this.persistedState.empty,
-          }
+          return { v: 0, state: this.persistedState.empty }
         } else {
-          delete rstate._id
-          return rstate
+          return { v: rstate.v, state: rstate.state }
         }
       })
   }
