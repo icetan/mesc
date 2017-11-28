@@ -16,6 +16,10 @@ const {
   HttpMessageConsumer,
 } = require('./http')
 
+const {
+  Tee,
+} = require('./util')
+
 module.exports = {
   MongoEventStore,
   MongoStateStore,
@@ -24,4 +28,5 @@ module.exports = {
   RedisMessageConsumer,
   HttpMessageProducer,
   HttpMessageConsumer,
+  Tee,
 }

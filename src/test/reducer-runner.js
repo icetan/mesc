@@ -11,7 +11,7 @@ const t = require('tap')
 const { ReducerRunner } = require('../es/reducer-runner')
 
 async function main() {
-  await t.test('ReducerRrunner should consume events pass to reduce and persist new state', async t => {
+  await t.test('ReducerRrunner should consume events passed to reduce and persist new state', async t => {
     let producerRun = false
     const event = { v: 1, message: 1 }
 
@@ -43,11 +43,17 @@ async function main() {
       createEvent: async(message) => ({ v: 0, message }),
     }
 
+    let restoreRun = false
+    let persistDone
+    const persistBlock = new Promise((resolve, reject) => {
+      persistDone = resolve
+    })
     const mockStateStore: StateStore<number> = {
       persistedState: mockReducer,
       restoreState: async() => {
-        t.ok(true,
-          'Should try to restore persisted state on init')
+        t.notOk(restoreRun,
+          'Should try to restore persisted state only once on init')
+        restoreRun = true
         return { v: 0, state: mockReducer.empty }
       },
       updateState: async(rstateOld, rstate) => {
@@ -55,6 +61,7 @@ async function main() {
           'Update old should be empty state')
         t.equal(rstate.state, 1,
           'Update state should be called with reducer output')
+        await persistBlock
       },
     }
 
@@ -76,7 +83,7 @@ async function main() {
       mockSnapshotStore,
     )
 
-    t.plan(8)
+    t.plan(9)
     t.notOk(producerRun,
       'Producer init should not be called before runner init')
 
@@ -85,7 +92,16 @@ async function main() {
     if (sendEvent) {
       t.ok(producerRun,
         'Producer init called after runner init')
-      sendEvent(event)
+      let waitedForPersist = false
+      const persistPromise = sendEvent(event)
+      persistPromise.then(() => {
+        t.ok(waitedForPersist, 'Giving a message to runner should return a promise that resolves when new state has been persisted')
+      })
+      waitedForPersist = true
+      if (persistDone) {
+        persistDone()
+      }
+      await persistPromise
     }
   })
 
