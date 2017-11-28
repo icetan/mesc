@@ -68,7 +68,6 @@ class MongoStateStore<S> implements StateStore<S> {
       { stateId: this.persistedState.stateId, v: rstateOld.v },
       query,
     ).then(info => {
-      console.log(`Update info ${JSON.stringify(info)}`)
       if (!info.lastErrorObject.updatedExisting) {
         console.log(`Update failed no matching persisted state, making a full persist`)
         return this._saveState(rstate)
