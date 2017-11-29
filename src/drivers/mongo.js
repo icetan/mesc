@@ -1,7 +1,7 @@
 // @flow
 
 // FIXME
-/** *import type { MongoClient, Collection } from 'mongodb' */
+import type { MongoClient, Collection } from 'mongodb'
 import type { PersistedState } from '../es/interfaces'
 
 import type {
@@ -15,11 +15,11 @@ const { getNextSequence } = require('mongodb-autoincrement')
 const update = require('mongo-diff-update')
 
 class MongoStateStore<S> implements StateStore<S> {
-  _collection: any/** *: Collection */
+  _collection: Collection
   persistedState: PersistedState<S>
 
   constructor(
-    mdb: any/** *: MongoClient */,
+    mdb: MongoClient,
     collectionName: string,
     persistedState: PersistedState<S>
   ) {
@@ -29,7 +29,6 @@ class MongoStateStore<S> implements StateStore<S> {
   }
 
   restoreState(): Promise<RState<S>> {
-    // $FlowFixMe
     return this._collection.findOne({ stateId: this.persistedState.stateId })
       .then(rstate => {
         if (rstate == null) {
@@ -78,10 +77,10 @@ class MongoStateStore<S> implements StateStore<S> {
 
 class MongoSnapshotStore<S> implements SnapshotStore<S> {
   persistedState: PersistedState<S>
-  _collection: any/** *: Collection */
+  _collection: Collection
 
   constructor(
-    mdb: any/** *: MongoClient */,
+    mdb: MongoClient,
     collectionName: string,
     persistedState: PersistedState<S>,
   ) {
@@ -91,7 +90,6 @@ class MongoSnapshotStore<S> implements SnapshotStore<S> {
   }
 
   restoreSnapshot(v: number): Promise<RState<S>> {
-    // $FlowFixMe
     return this._collection.findOne(
       { stateId: this.persistedState.stateId, v: { $lte: v } },
       { sort: [ ['v', 1] ] }
@@ -115,11 +113,11 @@ class MongoSnapshotStore<S> implements SnapshotStore<S> {
 }
 
 class MongoEventStore<M> implements EventStore<M> {
-  _mdb: any/** *: MongoClient */
+  _mdb: MongoClient
   _collectionName: string
-  _collection: any/** *: Collection */
+  _collection: Collection
 
-  constructor(mdb: any/** *: MongoClient */, collectionName: string) {
+  constructor(mdb: MongoClient, collectionName: string) {
     this._mdb = mdb
     this._collectionName = collectionName
     this._collection = mdb.collection(collectionName)
