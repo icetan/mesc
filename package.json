@@ -19,7 +19,7 @@
     "flow": "flow",
     "flow:typed": "flow-typed install",
     "flow:copy": "flow-copy-source -v -i src/test src/ lib/",
-    "tap": "tap lib/test/*.js"
+    "tap": "tap -Rtap lib/test/*.js"
   },
   "dependencies": {
     "mongo-diff-update": "^1.0.3",

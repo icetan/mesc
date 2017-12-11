@@ -15,7 +15,7 @@ class ReducerRunner<M, S> {
   _started: boolean
   _initialized: boolean
   // ensure no events are reduced while catching up.
-  _catchingup: boolean
+  _reducing: boolean
 
   _reducer: Reducer<M, S>
   _eventProducer: MessageProducer<Event<M>>
@@ -24,6 +24,7 @@ class ReducerRunner<M, S> {
   _snapshotStore: SnapshotStore<S>
 
   _rstate: RState<S>
+  _eventBuf: { [v: number]: Event<M> }
 
   constructor(
     reducer: Reducer<M, S>,
@@ -34,12 +35,13 @@ class ReducerRunner<M, S> {
   ) {
     this._started = false
     this._initialized = false
-    this._catchingup = false
+    this._reducing = false
     this._reducer = reducer
     this._eventProducer = eventProducer
     this._eventStore = eventStore
     this._stateStore = stateStore
     this._snapshotStore = snapshotStore
+    this._eventBuf = {}
   }
 
   // pure
@@ -62,11 +64,6 @@ class ReducerRunner<M, S> {
   }
 
   async _restoreCatchupAndSave(v: ?number): Promise<void> {
-    if (this._catchingup) {
-      throw new Error('Already catching up')
-    }
-    // Latch on to prevent reduction while catching up.
-    this._catchingup = true
     console.log(`Restoring from ${this._rstate.v}`)
 
     const catchup_ = async rstate_ => {
@@ -101,11 +98,7 @@ class ReducerRunner<M, S> {
       }
     }
 
-    try {
-      await restore()
-    } finally {
-      this._catchingup = false
-    }
+    await restore()
   }
 
   async init(): Promise<void> {
@@ -125,14 +118,33 @@ class ReducerRunner<M, S> {
     this._initialized = true
 
     const reduce = async(event: Event<M>): Promise<void> => {
-      if (this._catchingup) {
-        console.warn('In the middle of catching up, ignoring event')
-      } else if (this._rstate.v === event.v - 1) {
-        const rstateOld = this._rstate
-        this._rstate = this._reduceRstate(rstateOld, event)
-        await this._stateStore.updateState(rstateOld, this._rstate)
+      this._eventBuf[event.v] = event
+      if (this._reducing) {
+        console.warn('In the middle of reducing, buffering event', this._eventBuf)
       } else {
-        await this._restoreCatchupAndSave(event.v)
+        this._reducing = true
+        try {
+          let event_: ?Event<M>
+          // get next event in buffer
+          while (event_ = this._eventBuf[this._rstate.v + 1]) {
+            delete this._eventBuf[event_.v]
+            // TODO: Don't keep an internal RState, use StateStore to get state
+            // each time
+            const rstateOld = this._rstate
+            this._rstate = this._reduceRstate(rstateOld, event_)
+            await this._stateStore.updateState(rstateOld, this._rstate)
+          }
+          if (Object.keys(this._eventBuf).length > 0) {
+            // Events left in buffer but not in sequence
+            console.warn('Event buffer not empty after reduce, clearing buffer and restoring',
+              this._eventBuf)
+            await this._restoreCatchupAndSave(event.v)
+            // After restore clear buffer
+            this._eventBuf = {}
+          }
+        } finally {
+          this._reducing = false
+        }
       }
     }
 

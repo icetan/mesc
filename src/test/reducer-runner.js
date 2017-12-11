@@ -352,6 +352,88 @@ async function main() {
       }
     }
   })
+
+  await t.test('ReducerRrunner should ignore events while storing', async t => {
+    const startState = { v: 0, state: 0 }
+    const event = { v: 1, message: 1 }
+    const bufferedEvent = { v: 2, message: 2 }
+
+    const mockReducer = {
+      stateId: 'D',
+      empty: 0,
+      reduce: (state, message) => {
+        t.ok(true,
+          'Reducer should reduce')
+        return message
+      },
+    }
+
+    let sendEvent
+    const mockProducer: MessageProducer<Event<number>> = {
+      init: async produce => {
+        t.ok(true,
+          'Should only init producer once')
+        sendEvent = produce
+      },
+    }
+
+    const mockEventStore: EventStore<number> = {
+      replayEvents: async(v, cb) => {
+        t.equal(v, 0,
+          'Should catch up from 0')
+      },
+      createEvent: async message => ({ v: 0, message }),
+    }
+
+    let resolveUpdate
+    let updatePromise
+    const mockStateStore: StateStore<number> = {
+      persistedState: mockReducer,
+      restoreState: async() => {
+        t.ok(true,
+          'Should restore state once on init')
+        return startState
+      },
+      updateState: async(rstateOld, rstate) => {
+        t.ok(true,
+          'Should persist state')
+        updatePromise = new Promise((resolve, reject) => { resolveUpdate = resolve })
+        await updatePromise
+      },
+    }
+
+    const mockSnapshotStore: SnapshotStore<number> = {
+      persistedState: mockReducer,
+      restoreSnapshot: async v => {
+        t.notOk(true,
+          'Should not restore snapshot')
+        return startState
+      },
+      saveSnapshot: async rstate => {},
+    }
+
+    const reducerRunner: ReducerRunner<number, number> = new ReducerRunner(
+      mockReducer,
+      mockProducer,
+      mockEventStore,
+      mockStateStore,
+      mockSnapshotStore,
+    )
+
+    t.plan(7)
+
+    await reducerRunner.init()
+
+    if (sendEvent) {
+      sendEvent(event)
+      const resolveUpdate_ = resolveUpdate
+      // This event should be buffered and should not block
+      await sendEvent(bufferedEvent)
+      if (resolveUpdate_) resolveUpdate_()
+      if (resolveUpdate) resolveUpdate()
+      await updatePromise
+    }
+  })
 }
 
 main()
