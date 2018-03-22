@@ -8,7 +8,6 @@
     "lib/"
   ],
   "scripts": {
-    "install": "npm run flow:typed",
     "test": "npm run flow && npm run tap && npm run lint",
     "test:dev": "nodemon -w src/ -x \"npm run build && npm test\"",
     "clean": "rimraf -rf lib/",
@@ -17,7 +16,7 @@
     "lint": "eslint src/**",
     "lint-fix": "npm run lint -- --fix",
     "flow": "flow",
-    "flow:typed": "flow-typed install",
+    "flow:typed": "flow-typed update",
     "flow:copy": "flow-copy-source -v -i src/test src/ lib/",
     "tap": "tap -Rtap lib/test/*.js"
   },
