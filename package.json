@@ -22,27 +22,27 @@
   },
   "dependencies": {
     "mongo-diff-update": "^1.0.3",
-    "mongodb": "^2.2.33",
+    "mongodb": "^3.1.6",
     "mongodb-autoincrement": "^1.0.1",
     "redis": "^2.8.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
-    "babel-eslint": "^8.0.1",
+    "babel-eslint": "^8.2.6",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-flow": "^6.23.0",
-    "eslint": "^4.10.0",
+    "eslint": "^4.19.1",
     "eslint-config-standard": "^10.2.1",
-    "eslint-plugin-flowtype": "^2.39.1",
-    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-flowtype": "^2.50.3",
+    "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-node": "^5.2.1",
-    "eslint-plugin-promise": "^3.6.0",
-    "eslint-plugin-standard": "^3.0.1",
+    "eslint-plugin-promise": "^3.8.0",
+    "eslint-plugin-standard": "^3.1.0",
     "flow-bin": "^0.57.3",
-    "flow-copy-source": "^1.2.1",
-    "flow-typed": "^2.2.1",
-    "nodemon": "^1.12.1",
+    "flow-copy-source": "^1.3.0",
+    "flow-typed": "^2.5.1",
+    "nodemon": "^1.18.4",
     "rimraf": "^2.6.2",
-    "tap": "^10.7.3"
+    "tap": "^12.0.1"
   }
 }
