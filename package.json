@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "mongo-diff-update": "^1.0.3",
-    "mongodb": "^3.1.6",
+    "mongodb": "^3.5.2",
     "mongodb-autoincrement": "^1.0.1",
     "redis": "^2.8.0"
   },
